@@ -64,7 +64,7 @@ class MainWindow(wx.Frame):
                 h2 = cv2.calcHist([img], [2], None, [64], [0, 256])
                 cv2.normalize(h2, h2, 0, 255, cv2.NORM_MINMAX)
 
-                HBase.putValue(fname, "feature:color_hist", h0)
+                self.client.putValue(self.tablename, fname, self.columnfamily + ":color_hist", h0)
 
                 print fname
                 print [h0, h1, h2]
