@@ -1,24 +1,31 @@
 
 __author__ = 'Rigi'
 
-import json
-import requests
+import happybase
+
 
 class HBase:
     def __init__(self, url):
         self.url = url
-
-    def getVersion(self):
-        r = requests.get(self.url + "/version/cluster")
-        return r.content
+        self.connection = happybase.Connection(self.url)
 
     def listTable(self):
-        return requests.get(self.url)
+        return self.connection.tables()
+
+    def createTable(self, table, families):
+        return self.connection.create_table(table, families)
+
+    def deleteTable(self, table):
+        self.connection.delete_table(table, True)
 
     def putValue(self, table, row, col, value):
-        return requests.put(self.url + "/" + table + "/" + row + "/" + col, "{'Row':{'@key':'" + row + "','Cell':{'@column':'" + col + "', '':'" + value + "'}}}")
+        t = self.connection.table(table)
+        t.put(row, {col: value})
 
-    def createTable(self, table, column):
-        schema = {'@name': table, 'ColumnSchema': [{'name': column}]}
-        headers = {'content-type': 'application/json'}
-        return requests.put(self.url + "/" + table + "/schema", data=json.dumps(schema), headers=headers)
+    def getRow(self, table, row, col=None):
+        t = self.connection.table(table)
+        return t.row(row, col)
+
+    def scanTable(self, table, cols):
+        t = self.connection.table(table)
+        return t.scan(columns=cols)
