@@ -8,6 +8,7 @@ class AbstractDescriptor:
 
     def __init__(self, i_source):
         self.source = i_source
+        self.features = dict()
 
     @abc.abstractmethod
     def extract(self):
@@ -18,5 +19,5 @@ class AbstractDescriptor:
         """ Deserialize """
 
     @abc.abstractmethod
-    def fromstring(self, i_str):
+    def fromstring(self, ival):
         """ Serialize """

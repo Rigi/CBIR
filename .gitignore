@@ -54,3 +54,4 @@ docs/_build/
 
 # JetBrains IDE stuff
 .idea/
+src/myconfig.cfg
