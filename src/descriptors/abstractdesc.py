@@ -21,3 +21,13 @@ class AbstractDescriptor:
     @abc.abstractmethod
     def fromstring(self, ival):
         """ Serialize """
+
+    @classmethod
+    @abc.abstractmethod
+    def get_column_qualifier(cls):
+        """ Get the column qualifier of descriptor  """
+
+    @classmethod
+    @abc.abstractmethod
+    def init_from_db(cls, scan):
+        """  """

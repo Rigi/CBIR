@@ -1,3 +1,5 @@
+import os
+from os.path import isfile
 
 __author__ = 'Rigi'
 
@@ -19,9 +21,10 @@ class HBase:
         return self.connection.tables()
 
     def createTable(self, table, families):
-        return self.connection.create_table(table, families)
+        if table not in self.listTable():
+            self.connection.create_table(table, families)
 
-    def deleteTable(self, table):
+    def deleteTable(self, table=TABLE_NAME):
         self.connection.delete_table(table, True)
 
     def putValue(self, table, row, col, value):
@@ -42,3 +45,10 @@ class HBase:
     def scanTable(self, table, cols):
         t = self.connection.table(table)
         return t.scan(columns=cols)
+
+    def removeInvalidImages(self, table=TABLE_NAME):
+        b = self.connection.table(table).batch()
+        for key, value in self.scanTable(table, None):
+            if not isfile(key):
+                b.delete(key)
+        b.send()

@@ -1,6 +1,7 @@
 from src.comparators.ColorHistCorrel import ColorHistCorrel
 from src.db.HBaseWrapper import HBase
 from src.descriptors.ColorHistogram import ColorHistogram
+from src.query.SimpleQuery import SimpleQuery
 from src.readers.ImageReader import ImageReader
 from os import path
 from os import listdir
@@ -12,53 +13,53 @@ __author__ = 'Rigi'
 
 class MainWindow(wx.Frame):
     config = ConfigParser.SafeConfigParser({"host": "localhost", "port": 9090})
-    config.read("myconfig.cfg")
+    config.read("../myconfig.cfg")
 
     # Members
     db = HBase(config.get("database", "host"),
                config.get("database", "port"))
-    dirname = None
+    dir_name = None
 
     # Constructor
     def __init__(self, parent, title):
         wx.Frame.__init__(self, parent, title=title, size=(460, 200))
 
         # Create table if necessary
-        # self.db.deleteTable(MainWindow.TABLE_NAME)
-        if HBase.TABLE_NAME not in self.db.listTable():
-            self.db.createTable(HBase.TABLE_NAME, {HBase.CF_FEATURE: dict()})
+        # self.db.deleteTable()
+        # self.db.removeInvalidImages()
+        self.db.createTable(HBase.TABLE_NAME, {HBase.CF_FEATURE: dict()})
 
-        # A Statusbar in the bottom of the window
+        # A status bar in the bottom of the window
         self.sb = self.CreateStatusBar(2)
         self.sb.SetStatusText("Connected to " + self.db.host + " via Thrift.", 1)
         self.gauge = wx.Gauge(self.sb, pos=(5, 2), size=(200, 20))
 
         # File menu
-        filemenu = wx.Menu()
+        file_menu = wx.Menu()
         self.Bind(wx.EVT_MENU, self.OnOpen,
-                  filemenu.Append(wx.ID_OPEN, "&Open", ""))
+                  file_menu.Append(wx.ID_OPEN, "&Open", ""))
         self.Bind(wx.EVT_MENU, self.OnAbout,
-                  filemenu.Append(wx.ID_ABOUT, "&About", " Information about this program"))
-        filemenu.AppendSeparator()
+                  file_menu.Append(wx.ID_ABOUT, "&About", " Information about this program"))
+        file_menu.AppendSeparator()
         self.Bind(wx.EVT_MENU, self.OnExit,
-                  filemenu.Append(wx.ID_EXIT, "E&xit", " Terminate the program"))
+                  file_menu.Append(wx.ID_EXIT, "E&xit", " Terminate the program"))
 
         # Command menu
-        cmdmenu = wx.Menu()
+        cmd_menu = wx.Menu()
         self.Bind(wx.EVT_MENU, self.OnRecalcHist,
-                  cmdmenu.Append(wx.ID_ANY, "&Histogram", " Recalc Color Histogram Features"))
+                  cmd_menu.Append(wx.ID_ANY, "&Histogram", " Recalc Color Histogram Features"))
 
         # Query menu
-        qrymenu = wx.Menu()
+        qry_menu = wx.Menu()
         self.Bind(wx.EVT_MENU, self.OnQueryColorHist,
-                  qrymenu.Append(wx.ID_ANY, "&Histogram", " Retrieve images via Color Histogram Features"))
+                  qry_menu.Append(wx.ID_ANY, "&Histogram", " Retrieve images via Color Histogram Features"))
 
         # Creating the menu bar.
-        menubar = wx.MenuBar()
-        menubar.Append(filemenu, "&File")
-        menubar.Append(cmdmenu, "&Extract Features")
-        menubar.Append(qrymenu, "&Query By")
-        self.SetMenuBar(menubar)
+        menu_bar = wx.MenuBar()
+        menu_bar.Append(file_menu, "&File")
+        menu_bar.Append(cmd_menu, "&Extract Features")
+        menu_bar.Append(qry_menu, "&Query By")
+        self.SetMenuBar(menu_bar)
 
         # Set the window position and visibility
         self.Centre()
@@ -77,22 +78,22 @@ class MainWindow(wx.Frame):
     def OnOpen(self, e):
         dlg = wx.DirDialog(self, "Choose an image directory")
         if dlg.ShowModal() == wx.ID_OK:
-            self.dirname = dlg.GetPath()
+            self.dir_name = dlg.GetPath()
             dlg.Destroy()
-            self.SetTitle("CBIR (" + self.dirname + ")")
+            self.SetTitle("CBIR (" + self.dir_name + ")")
 
     def OnRecalcHist(self, e):
-        if self.dirname:
-            images = [path.join(self.dirname, f) for f in listdir(self.dirname)]
+        if self.dir_name:
+            images = [path.join(self.dir_name, f) for f in listdir(self.dir_name)]
             self.gauge.SetRange(len(images))
             self.gauge.SetValue(0)
             self.sb.SetStatusText("Calculating image histograms.", 1)
 
-            self.db_hist = ColorHistogram(ImageReader(images))
-            self.db_hist.extract()
+            db_hist = ColorHistogram(ImageReader(images))
+            db_hist.extract()
             self.db.putValues(HBase.TABLE_NAME,
                               ColorHistogram.CQ_COLOR_HIST,
-                              self.db_hist.tostring())
+                              db_hist.tostring())
 
             self.sb.SetStatusText("Image histograms recalculated.", 1)
             print "Done."
@@ -100,22 +101,12 @@ class MainWindow(wx.Frame):
     def OnQueryColorHist(self, e):
         dlg = wx.FileDialog(self, "Choose a query image")
         if dlg.ShowModal() == wx.ID_OK:
-            fname = dlg.GetPath()
+            f = dlg.GetPath()
             dlg.Destroy()
 
-            self.q_hist = ColorHistogram(ImageReader([fname]))
-            self.q_hist.extract()
-
-            self.cmp = ColorHistCorrel()
-            #print self.cmp.get_distance(self.q_hist, self.db_hist)
-
-            scan = self.db.scanTable(HBase.TABLE_NAME,
-                                     [ColorHistogram.CQ_COLOR_HIST])
-
-            self.db_hist2 = ColorHistogram.init_from_db(scan)
-            d = self.cmp.get_distance(self.q_hist, self.db_hist2)
-            dlist = sorted(d.items(), key=lambda t: t[1], reverse=True)
-            for item in dlist[:5]:
+            q = SimpleQuery(ImageReader([f]), ColorHistogram, ColorHistCorrel, self.db, HBase.TABLE_NAME)
+            q.execute()
+            for item in q.best_matches(5):
                 print item
 
 #######
