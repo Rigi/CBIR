@@ -7,22 +7,26 @@ from os import path
 from os import listdir
 import ConfigParser
 import wx
+from src.ui.QueryUI import QueryUI
+from src.ui.ResultPresenter import ImagePresenter
 
 __author__ = 'Rigi'
 
 
-class MainWindow(wx.Frame):
+class MainWindow(wx.MDIParentFrame):
     config = ConfigParser.SafeConfigParser({"host": "localhost", "port": 9090})
     config.read("../myconfig.cfg")
 
-    # Members
+    # Class Members
     db = HBase(config.get("database", "host"),
                config.get("database", "port"))
-    dir_name = None
 
     # Constructor
     def __init__(self, parent, title):
-        wx.Frame.__init__(self, parent, title=title, size=(460, 200))
+        wx.MDIParentFrame.__init__(self, parent, title=title, size=(600, 400))
+
+        self.title_num = 0
+        self.dir_name = None
 
         # Create table if necessary
         # self.db.deleteTable()
@@ -32,15 +36,12 @@ class MainWindow(wx.Frame):
         # A status bar in the bottom of the window
         self.sb = self.CreateStatusBar(2)
         self.sb.SetStatusText("Connected to " + self.db.host + " via Thrift.", 1)
-        self.gauge = wx.Gauge(self.sb, pos=(5, 2), size=(200, 20))
+        # self.gauge = wx.Gauge(self.sb, pos=(5, 2), size=(200, 20))
 
         # File menu
         file_menu = wx.Menu()
-        self.Bind(wx.EVT_MENU, self.OnOpen,
-                  file_menu.Append(wx.ID_OPEN, "&Open", ""))
-        self.Bind(wx.EVT_MENU, self.OnAbout,
-                  file_menu.Append(wx.ID_ABOUT, "&About", " Information about this program"))
-        file_menu.AppendSeparator()
+        self.Bind(wx.EVT_MENU, self.OnCreateQuery,
+                  file_menu.Append(wx.ID_NEW, "&Create New Query", " Create a Simple Query"))
         self.Bind(wx.EVT_MENU, self.OnExit,
                   file_menu.Append(wx.ID_EXIT, "E&xit", " Terminate the program"))
 
@@ -65,28 +66,20 @@ class MainWindow(wx.Frame):
         self.Centre()
         self.Show(True)
 
-    def OnAbout(self, e):
-        # A message dialog box with an OK button. wx.OK is a standard ID in wxWidgets.
-        dlg = wx.MessageDialog(self, "A small text editor", "About Sample Editor", wx.OK)
-        dlg.ShowModal()
-        dlg.Destroy()
-
     def OnExit(self, e):
         self.db.connection.close()
-        self.Close(True)  # Close the frame.
+        self.Close(True)
 
-    def OnOpen(self, e):
-        dlg = wx.DirDialog(self, "Choose an image directory")
-        if dlg.ShowModal() == wx.ID_OK:
-            self.dir_name = dlg.GetPath()
-            dlg.Destroy()
-            self.SetTitle("CBIR (" + self.dir_name + ")")
+    def OnCreateQuery(self, e):
+        self.title_num += 1
+        qui = QueryUI(self, "Untitled Query " + str(self.title_num))
+        qui.Show(True)
 
     def OnRecalcHist(self, e):
         if self.dir_name:
             images = [path.join(self.dir_name, f) for f in listdir(self.dir_name)]
-            self.gauge.SetRange(len(images))
-            self.gauge.SetValue(0)
+            # self.gauge.SetRange(len(images))
+            # self.gauge.SetValue(0)
             self.sb.SetStatusText("Calculating image histograms.", 1)
 
             db_hist = ColorHistogram(ImageReader(images))
@@ -106,8 +99,9 @@ class MainWindow(wx.Frame):
 
             q = SimpleQuery(ImageReader([f]), ColorHistogram, ColorHistCorrel, self.db, HBase.TABLE_NAME)
             q.execute()
-            for item in q.best_matches(5):
-                print item
+
+            ip = ImagePresenter(q.best_matches(10), self)
+            ip.Show()
 
 #######
 # MAIN

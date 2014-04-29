@@ -1,0 +1,13 @@
+File:				Reference Images*:		Feature Extractors*:		Comparators*:
+ Open Query...			 Add Directory...		 Color Histogram		 Histogram:
+ Create New Query		 Pre-processed Images						  Correlation
+ Close Query
+---
+ Save Query.../
+ Save Query As.../
+---
+ Exit
+
+
+* MDIChildMenu
+/ Enabled/Disabled MDIParentMenu

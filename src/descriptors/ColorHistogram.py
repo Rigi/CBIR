@@ -1,6 +1,5 @@
 import cv2
 from numpy import *
-from numpy.numarray.functions import reshape
 from abstractdesc import AbstractDescriptor
 from src.db.HBaseWrapper import HBase
 
@@ -19,7 +18,7 @@ class ColorHistogram(AbstractDescriptor):
         @rtype : dictionary of image features, key=image uri, value=feature
         """
         for path, img in self.source:
-            if img != None:
+            if img is not None:
                 b = cv2.calcHist([img], [0], None, [64], [0, 256])
                 g = cv2.calcHist([img], [1], None, [64], [0, 256])
                 r = cv2.calcHist([img], [2], None, [64], [0, 256])
