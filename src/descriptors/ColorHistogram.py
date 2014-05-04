@@ -8,8 +8,6 @@ __author__ = 'Rigi'
 
 class ColorHistogram(AbstractDescriptor):
 
-    CQ_COLOR_HIST = HBase.CF_FEATURE + HBase.CF_SEPARATOR + "color_hist"
-
     def __init__(self, i_source=None):
         super(ColorHistogram, self).__init__(i_source)
 
@@ -39,8 +37,8 @@ class ColorHistogram(AbstractDescriptor):
         self.features[src] = arr
 
     @classmethod
-    def get_column_qualifier(cls):
-        return cls.CQ_COLOR_HIST
+    def column_qualifier(cls):
+        return HBase.CF_FEATURE + HBase.CF_SEPARATOR + "color_hist"
 
     @classmethod
     def init_from_db(cls, scan):

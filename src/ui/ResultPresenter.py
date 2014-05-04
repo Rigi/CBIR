@@ -3,15 +3,14 @@ from wx import *
 __author__ = 'Rigi'
 
 
-class ImagePresenter(Frame):
-    max_result = 6
+class ImagePresenter(Panel):
+    MAX_RESULT = 6
 
     def __init__(self, distances, *args, **kwargs):
         super(ImagePresenter, self).__init__(*args, **kwargs)
 
-        self.distances = distances[:ImagePresenter.max_result]
+        self.distances = distances[:ImagePresenter.MAX_RESULT]
         self.InitUI()
-        self.SetTitle("Results")
 
     def InitUI(self):
         sizer = GridSizer(cols=3, vgap=20, hgap=5)

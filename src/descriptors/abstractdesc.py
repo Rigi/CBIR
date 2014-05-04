@@ -3,7 +3,7 @@ import abc
 __author__ = 'Rigi'
 
 
-class AbstractDescriptor:
+class AbstractDescriptor():
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, i_source):
@@ -23,8 +23,8 @@ class AbstractDescriptor:
         """ Serialize """
 
     @classmethod
-    @abc.abstractmethod
-    def get_column_qualifier(cls):
+    @abc.abstractproperty
+    def column_qualifier(cls):
         """ Get the column qualifier of descriptor  """
 
     @classmethod
