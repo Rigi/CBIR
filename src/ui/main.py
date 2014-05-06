@@ -31,8 +31,8 @@ URL_QUERY = "url_query"
 
 
 class MainWindow(wx.MDIParentFrame):
-    config = ConfigParser.SafeConfigParser({"host": "localhost", "port": 9090})
-    config.read("../myconfig.cfg")
+    config = ConfigParser.SafeConfigParser({"host": "localhost", "port": "9090"})
+    config.read(path.join(path.dirname(__file__), "../myconfig.cfg"))
 
     # Constructor
     def __init__(self, parent, title):
