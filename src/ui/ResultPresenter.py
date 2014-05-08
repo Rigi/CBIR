@@ -1,4 +1,5 @@
-from wx import *
+from wx import Panel
+import wx
 
 __author__ = 'Rigi'
 
@@ -13,13 +14,13 @@ class ImagePresenter(Panel):
         self.InitUI()
 
     def InitUI(self):
-        sizer = GridSizer(cols=3, vgap=20, hgap=5)
+        sizer = wx.GridSizer(cols=3, vgap=20, hgap=5)
 
         for uri, fitness in self.distances:
-            bmp = Image(uri).ConvertToBitmap()
-            item = BoxSizer(VERTICAL)
-            item.Add(StaticText(self, label="Fitness: " + str(fitness)))
-            item.Add(StaticBitmap(self, bitmap=bmp, size=(bmp.GetWidth(), bmp.GetHeight())))
+            bmp = wx.Image(uri).ConvertToBitmap()
+            item = wx.BoxSizer(wx.VERTICAL)
+            item.Add(wx.StaticText(self, label="Fitness: " + str(fitness)))
+            item.Add(wx.StaticBitmap(self, bitmap=bmp, size=(bmp.GetWidth(), bmp.GetHeight())))
             sizer.Add(item)
 
         self.SetClientSize(sizer.GetMinSize())

@@ -1,5 +1,5 @@
 import cv2
-from numpy import *
+from numpy import array, ndarray, float32
 from abstractdesc import AbstractDescriptor
 from src.db.HBaseWrapper import HBase
 

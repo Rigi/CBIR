@@ -1,5 +1,5 @@
-import os
 import pickle
+from os.path import isfile
 from src.db.HBaseWrapper import HBase
 
 __author__ = 'Rigi'
@@ -66,7 +66,7 @@ class SimpleQuery():
             f.close()
 
     def open(self, path):
-        if path and os.path.isfile(path):
+        if path and isfile(path):
             f = open(path, 'rb')
             self.descriptor_cls = pickle.load(f)
             self.comparator_cls = pickle.load(f)

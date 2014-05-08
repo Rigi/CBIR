@@ -66,6 +66,8 @@ class MainWindow(wx.MDIParentFrame):
                   db_menu.Append(wx.ID_DELETE, "&Recreate Table", " Delete and recreate the CBIR table of selected database"))
         self.Bind(wx.EVT_MENU, self.OnFixTable,
                   db_menu.Append(wx.ID_REMOVE, "&Fix Table", " Remove invalid file references from selected database"))
+        self.Bind(wx.EVT_MENU, self.OnUploadImages,
+                  db_menu.Append(wx.ID_ADD, "&Upload Images", " Upload images from local directory"))
 
         # Creating the menu bar.
         menu_bar = wx.MenuBar()
@@ -253,6 +255,15 @@ class MainWindow(wx.MDIParentFrame):
         else:
             self.PrintConsole("No database selected!")
 
+    def OnUploadImages(self, e):
+        if self.query.database:
+            dlg = wx.DirDialog(self, "Select the image directory")
+            if dlg.ShowModal() == wx.ID_OK:
+                images = [path.join(dlg.GetPath(), f) for f in listdir(dlg.GetPath())]
+                self.query.database.uploadImages(images)
+            dlg.Destroy()
+        else:
+            self.PrintConsole("No database selected!")
 
 #######
 # MAIN
